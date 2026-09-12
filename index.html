@@ -12,6 +12,43 @@
         let posX = 0 , posY = 0 ;//現在地
         let lastPosX = 0 , lastPosY = 0 ;//前の値
         let moved = false;//動いたか
+        let pendingMouseX = 0;
+        let pendingMouseY = 0;
+        let mouseRequestInFlight = false;
+        let mouseFlushScheduled = false;
+
+        function queueMouseMove(x, y) {
+            pendingMouseX += x;
+            pendingMouseY += y;
+            if (!mouseFlushScheduled) {
+                mouseFlushScheduled = true;
+                requestAnimationFrame(flushMouseMove);
+            }
+        }
+
+        function flushMouseMove() {
+            mouseFlushScheduled = false;
+            if (mouseRequestInFlight || (pendingMouseX === 0 && pendingMouseY === 0)) return;
+
+            const x = pendingMouseX;
+            const y = pendingMouseY;
+            pendingMouseX = 0;
+            pendingMouseY = 0;
+            mouseRequestInFlight = true;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", server + "/api/mouse?x=" + x + "&y=" + y, true);
+            xhr.onloadend = function () {
+                mouseRequestInFlight = false;
+                if (pendingMouseX !== 0 || pendingMouseY !== 0) flushMouseMove();
+            };
+            xhr.onerror = function () {
+                mouseRequestInFlight = false;
+                if (pendingMouseX !== 0 || pendingMouseY !== 0) flushMouseMove();
+            };
+            xhr.send(null);
+        }
+
         window.onload = (e) => {
             let logger = document.getElementsByClassName("log")[0];
             document.body.addEventListener("mousemove",function(e){
@@ -29,22 +66,8 @@
                 posX = x;
                 posY = y;
 
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", server+"/api/mouse?x="+dX*-1 +"&y="+dY*-1, true);
+                queueMouseMove(dX * -1, dY * -1);
                 logger.innerHTML=parseInt(dX)+","+parseInt(dY);
-                xhr.onload = function (e) {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                    console.log(xhr.responseText);
-                    } else {
-                    console.error(xhr.statusText);
-                    }
-                }
-                };
-                xhr.onerror = function (e) {
-                    console.error(xhr.statusText);
-                };
-                xhr.send(null);
             })
             document.body.addEventListener("mousedown",function(e){
                 moved=false;
@@ -117,21 +140,7 @@
                 posY = y;
                 logger.innerHTML=parseInt(dX)+","+parseInt(dY)
 
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", server+"/api/mouse?x="+dX*-1 +"&y="+dY*-1, true);
-                xhr.onload = function (e) {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                    console.log(xhr.responseText);
-                    } else {
-                    console.error(xhr.statusText);
-                    }
-                }
-                };
-                xhr.onerror = function (e) {
-                    console.error(xhr.statusText);
-                };
-                xhr.send(null);
+                queueMouseMove(dX * -1, dY * -1);
             });
             document.body.addEventListener("touchstart",function(e){
                 moved=false;
@@ -171,21 +180,7 @@
                 posX = x;
                 posY = y;
 
-                var xhr = new XMLHttpRequest();
-                xhr.open("GET", server+"/api/mouse?x="+dX*-1 +"&y="+dY*-1, true);
-                xhr.onload = function (e) {
-                if (xhr.readyState === 4) {
-                    if (xhr.status === 200) {
-                    console.log(xhr.responseText);
-                    } else {
-                    console.error(xhr.statusText);
-                    }
-                }
-                };
-                xhr.onerror = function (e) {
-                    console.error(xhr.statusText);
-                };
-                xhr.send(null);
+                queueMouseMove(dX * -1, dY * -1);
             }
         }
 

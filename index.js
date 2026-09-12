@@ -7,6 +7,7 @@ var pjson = require('./package.json');
 var app = express();
 var port = 2222;
 var sens = 3;
+robot.setMouseDelay(0);
 
 
 var server = app.listen(port, function () {
@@ -30,7 +31,6 @@ app.get("/api/mouse", function (req, res, next) {
     nxX = Math.max(0, Math.min(nxX, screen.width - 1));
     nxY = Math.max(0, Math.min(nxY, screen.height - 1));
     robot.moveMouse(nxX, nxY);
-    console.log(`/api/mouse : (${nxX} , ${nxY}) `);
     res.send("ok");
 });
 app.get("/api/click",function(req,res,next){
