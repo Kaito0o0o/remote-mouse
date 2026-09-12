@@ -2,7 +2,7 @@
 <head>
     <meta charset="UTF-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>Document</title>
     <script>
         let snapXY = false;
@@ -86,6 +86,12 @@
 
         window.onload = (e) => {
             let logger = document.getElementsByClassName("log")[0];
+            function preventBrowserGesture(e) {
+                e.preventDefault();
+            }
+            document.addEventListener("gesturestart", preventBrowserGesture, {passive: false});
+            document.addEventListener("gesturechange", preventBrowserGesture, {passive: false});
+            document.addEventListener("gestureend", preventBrowserGesture, {passive: false});
             document.body.addEventListener("mousemove",function(e){
                 moved =true;
                 e.preventDefault();
@@ -158,7 +164,7 @@
                 xhr.send(null);
 
                 }
-            })
+            }, {passive: false})
             document.body.addEventListener("touchmove",function(e){
                 moved=true;
                 e.preventDefault();
@@ -184,7 +190,7 @@
                 logger.innerHTML=parseInt(dX)+","+parseInt(dY)
 
                 queueMouseMove(dX * -1, dY * -1);
-            });
+            }, {passive: false});
             document.body.addEventListener("touchstart",function(e){
                 moved=false;
                 if (e.touches.length >= 2) {
@@ -206,10 +212,10 @@
                 lastPosX = x;
                 lastPosY  = y
                 console.log(posX);
-            });
+            }, {passive: false});
             document.body.addEventListener("touchend",function(e){
                 if (e.touches.length === 0) touchMode = "mouse";
-            });
+            }, {passive: false});
             let gyroEnable = false;
             if(gyroEnable)window.addEventListener("deviceorientation", handleOrientation, true);
  
@@ -248,12 +254,16 @@
             background-color: rgb(65, 65, 65);
             margin: 0;
             padding: 0;
-            overflow: hidden
+            overflow: hidden;
+            touch-action: none;
+            overscroll-behavior: none;
         }
         .full{
             overflow-y:scroll;
             height:90%;
             width:90%;
+            touch-action: none;
+            overscroll-behavior: none;
 
         }
         .log{
