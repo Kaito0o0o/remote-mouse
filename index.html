@@ -60,8 +60,9 @@
             pendingScrollY += y;
             if (scrollRequestInFlight) return;
 
-            const scrollX = Math.round(-pendingScrollX / 4);
-            const scrollY = Math.round(-pendingScrollY / 4);
+            // 二本指の移動を大きめのスクロール量へ変換して操作感を上げる。
+            const scrollX = Math.round(-pendingScrollX / 2);
+            const scrollY = Math.round(-pendingScrollY / 2);
             if (scrollX === 0 && scrollY === 0) return;
             pendingScrollX = 0;
             pendingScrollY = 0;
