@@ -38,6 +38,15 @@ app.get("/api/click",function(req,res,next){
     console.log("/api/click")
     res.send("ok");
 });
+app.get("/api/scroll", function (req, res, next) {
+    var qx = Number.parseInt(req.query.x, 10);
+    var qy = Number.parseInt(req.query.y, 10);
+    if (!Number.isFinite(qx) || !Number.isFinite(qy)) {
+        return res.status(400).send("x and y must be integers");
+    }
+    robot.scrollMouse(qx, qy);
+    res.send("ok");
+});
 app.get("", function (req, res, next) {
     res.sendFile(__dirname + "/index.html");
 });

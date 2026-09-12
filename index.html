@@ -16,6 +16,12 @@
         let pendingMouseY = 0;
         let mouseRequestInFlight = false;
         let mouseFlushScheduled = false;
+        let pendingScrollX = 0;
+        let pendingScrollY = 0;
+        let scrollRequestInFlight = false;
+        let touchMode = "mouse";
+        let lastTouchCenterX = 0;
+        let lastTouchCenterY = 0;
 
         function queueMouseMove(x, y) {
             pendingMouseX += x;
@@ -47,6 +53,34 @@
                 if (pendingMouseX !== 0 || pendingMouseY !== 0) flushMouseMove();
             };
             xhr.send(null);
+        }
+
+        function queueScroll(x, y) {
+            pendingScrollX += x;
+            pendingScrollY += y;
+            if (scrollRequestInFlight) return;
+
+            const scrollX = Math.round(-pendingScrollX / 4);
+            const scrollY = Math.round(-pendingScrollY / 4);
+            if (scrollX === 0 && scrollY === 0) return;
+            pendingScrollX = 0;
+            pendingScrollY = 0;
+            scrollRequestInFlight = true;
+
+            const xhr = new XMLHttpRequest();
+            xhr.open("GET", server + "/api/scroll?x=" + scrollX + "&y=" + scrollY, true);
+            xhr.onloadend = xhr.onerror = function () {
+                scrollRequestInFlight = false;
+                if (pendingScrollX !== 0 || pendingScrollY !== 0) queueScroll(0, 0);
+            };
+            xhr.send(null);
+        }
+
+        function touchCenter(touches) {
+            return {
+                x: (touches[0].clientX + touches[1].clientX) / 2,
+                y: (touches[0].clientY + touches[1].clientY) / 2
+            };
         }
 
         window.onload = (e) => {
@@ -127,6 +161,14 @@
             document.body.addEventListener("touchmove",function(e){
                 moved=true;
                 e.preventDefault();
+                if (touchMode === "scroll") {
+                    if (e.touches.length < 2) return;
+                    var center = touchCenter(e.touches);
+                    queueScroll(center.x - lastTouchCenterX, center.y - lastTouchCenterY);
+                    lastTouchCenterX = center.x;
+                    lastTouchCenterY = center.y;
+                    return;
+                }
                 var x = e.changedTouches[0].clientX;
                 if(snapXY) x = e.changedTouches[0].clientY;
                 var y = e.changedTouches[0].clientY;
@@ -144,6 +186,15 @@
             });
             document.body.addEventListener("touchstart",function(e){
                 moved=false;
+                if (e.touches.length >= 2) {
+                    touchMode = "scroll";
+                    var center = touchCenter(e.touches);
+                    lastTouchCenterX = center.x;
+                    lastTouchCenterY = center.y;
+                    moved = true;
+                    return;
+                }
+                touchMode = "mouse";
                 var x = e.changedTouches[0].clientX;
                 if(snapXY) x = e.changedTouches[0].clientY;
                 var y = e.changedTouches[0].clientY;
@@ -156,7 +207,7 @@
                 console.log(posX);
             });
             document.body.addEventListener("touchend",function(e){
-                
+                if (e.touches.length === 0) touchMode = "mouse";
             });
             let gyroEnable = false;
             if(gyroEnable)window.addEventListener("deviceorientation", handleOrientation, true);
