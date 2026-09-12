@@ -6,7 +6,9 @@
     <title>Document</title>
     <script>
         let snapXY = false;
-        let server = "http://192.168.3.63:2222";
+        // QRコードで開いたページと同じサーバーへリクエストする。
+        // 固定IPにすると、PCのIP変更やネットワーク切り替えで接続できなくなる。
+        const server = window.location.origin;
         let posX = 0 , posY = 0 ;//現在地
         let lastPosX = 0 , lastPosY = 0 ;//前の値
         let moved = false;//動いたか
